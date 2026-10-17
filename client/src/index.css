@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+  
+  code, pre, .font-mono, .terminal-text {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* CRT scanline effect */
+.scan-line {
+  width: 100%;
+  height: 90px;
+  background: linear-gradient(0deg, transparent 0%, rgba(56, 189, 248, 0.12) 50%, transparent 100%);
+  position: absolute;
+  top: -100px;
+  left: 0;
+  pointer-events: none;
+  animation: scan 9s linear infinite;
+  opacity: 0.25;
+}
+
+@keyframes scan {
+  0% { top: -100px; }
+  100% { top: 100%; }
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090b10;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+.glow-sky {
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.18);
+}
+.glow-emerald {
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.22);
+}
+.glow-rose {
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.25);
+}
+

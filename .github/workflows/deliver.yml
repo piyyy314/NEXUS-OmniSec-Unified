@@ -1,0 +1,140 @@
+# Shadow313 NEXUS — Automated Delivery Pipeline
+# Runs on every push to master
+# Produces: versioned manifest + 313-BIND receipt + GitHub Pages deployment
+
+name: Delivery Pipeline
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - 'shadow313/**'
+      - 'scripts/delivery/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+
+  # ── Build delivery artifacts ──────────────────────────────────────────────
+  build:
+    name: Build & Version Artifacts
+    runs-on: ubuntu-24.04
+    outputs:
+      delivery_id: ${{ steps.pipeline.outputs.delivery_id }}
+      version:     ${{ steps.pipeline.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Shadow313
+        run: pip install -e "." -q
+
+      - name: Run delivery pipeline (no server, no browser)
+        id: pipeline
+        run: |
+          python3 - << 'PYEOF'
+          import sys, json, os
+          sys.path.insert(0, '.')
+          from scripts.delivery.pipeline import scan_deliverables, generate_manifest, create_delivery_receipt, build_index, DIST_DIR, RECEIPT_DIR, MANIFEST
+
+          DIST_DIR.mkdir(exist_ok=True)
+          RECEIPT_DIR.mkdir(exist_ok=True)
+
+          files    = scan_deliverables()
+          manifest = generate_manifest(files)
+          receipt  = create_delivery_receipt(manifest)
+          index    = build_index(manifest, 8313)
+
+          MANIFEST.write_text(json.dumps(manifest, indent=2, default=str))
+          (DIST_DIR / 'index.html').write_text(index)
+          (RECEIPT_DIR / f"{receipt['bind_id']}.json").write_text(json.dumps(receipt, indent=2, default=str))
+
+          print(f"Delivery ID: {manifest['delivery_id']}")
+          print(f"Files: {manifest['total_files']}")
+          print(f"Version: {manifest['platform_version']}")
+          print(f"Git SHA: {manifest['git_sha']}")
+          print(f"Receipt: {receipt['bind_id']}")
+
+          # Write GitHub Actions outputs
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"delivery_id={manifest['delivery_id']}\n")
+              f.write(f"version={manifest['platform_version']}\n")
+          PYEOF
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: s313-nexus-delivery-${{ github.sha }}
+          path: |
+            dist/
+            docs/*.html
+            docs/*.json
+          retention-days: 30
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/
+
+  # ── Deploy to GitHub Pages ────────────────────────────────────────────────
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-24.04
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  # ── Commit manifest back to repo ──────────────────────────────────────────
+  commit-manifest:
+    name: Commit Versioned Manifest
+    runs-on: ubuntu-24.04
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install and run pipeline
+        run: |
+          pip install -e "." -q
+          python3 - << 'PYEOF'
+          import sys, json, os
+          sys.path.insert(0, '.')
+          from scripts.delivery.pipeline import scan_deliverables, generate_manifest, create_delivery_receipt, DIST_DIR, RECEIPT_DIR, MANIFEST
+          DIST_DIR.mkdir(exist_ok=True)
+          RECEIPT_DIR.mkdir(exist_ok=True)
+          files    = scan_deliverables()
+          manifest = generate_manifest(files)
+          receipt  = create_delivery_receipt(manifest)
+          MANIFEST.write_text(json.dumps(manifest, indent=2, default=str))
+          (RECEIPT_DIR / f"{receipt['bind_id']}.json").write_text(json.dumps(receipt, indent=2, default=str))
+          print(f"Manifest: {manifest['delivery_id']}")
+          PYEOF
+
+      - name: Commit manifest and receipts
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist/manifest.json dist/receipts/ || true
+          git diff --staged --quiet || git commit -m "chore(delivery): update manifest ${{ needs.build.outputs.delivery_id }} [skip ci]"
+          git push origin master || true

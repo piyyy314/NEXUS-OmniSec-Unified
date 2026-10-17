@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow313 NEXUS — Full Stack Architecture Map</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+:root{
+  --green:#22c55e;--amber:#f59e0b;--cyan:#06b6d4;--red:#ef4444;
+  --purple:#a78bfa;--blue:#3b82f6;--orange:#f97316;
+  --bg:#000;--bg2:#080808;--bg3:#0a0f1a;
+  --border:rgba(34,197,94,0.15);--border2:rgba(30,41,59,0.6);
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.dl-banner{background:rgba(34,197,94,0.12);border-bottom:1px solid rgba(34,197,94,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.dl-banner-text{font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace;}
+.dl-btn{display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#000;border:none;border-radius:6px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+.nav{background:rgba(0,0,0,0.97);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:100;}
+.nav-hex{width:28px;height:28px;background:var(--green);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:9px;font-family:'JetBrains Mono',monospace;}
+.nav-brand{font-size:14px;font-weight:800;}.nav-brand span{color:var(--green);}
+.nav-right{margin-left:auto;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.hero{padding:40px 24px 32px;text-align:center;border-bottom:1px solid var(--border);}
+.hero h1{font-size:clamp(22px,4vw,36px);font-weight:800;margin-bottom:8px;}
+.hero h1 span{color:var(--green);}
+.hero p{font-size:14px;color:var(--muted);max-width:600px;margin:0 auto;}
+.main{max-width:1200px;margin:0 auto;padding:32px 24px;}
+
+/* ── Layer cards ── */
+.layer{margin-bottom:28px;border-radius:14px;overflow:hidden;border:1px solid var(--border2);}
+.layer-header{padding:14px 20px;display:flex;align-items:center;gap:12px;font-weight:700;font-size:13px;letter-spacing:.04em;}
+.layer-body{padding:16px 20px;background:var(--bg2);}
+.layer-grid{display:grid;gap:10px;}
+.layer-grid.cols-2{grid-template-columns:1fr 1fr;}
+.layer-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.layer-grid.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+
+/* ── Component boxes ── */
+.comp{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;position:relative;}
+.comp-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.comp-sub{font-size:11px;color:var(--muted);line-height:1.5;font-family:'JetBrains Mono',monospace;}
+.comp-port{font-size:10px;font-family:'JetBrains Mono',monospace;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.2);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:6px;}
+.comp-status{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;}
+.status-green{background:var(--green);box-shadow:0 0 6px var(--green);}
+.status-amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.status-red{background:var(--red);}
+.status-blue{background:var(--blue);box-shadow:0 0 6px var(--blue);}
+
+/* ── Arrow connectors ── */
+.arrow-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.arrow{color:var(--green);font-size:16px;}
+.arrow-label{background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--green);}
+
+/* ── Setup order ── */
+.setup-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px;}
+.step{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:16px;position:relative;}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:10px;}
+.step-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.step-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+.step-status{font-size:10px;font-family:'JetBrains Mono',monospace;margin-top:8px;padding:2px 8px;border-radius:4px;display:inline-block;}
+
+/* ── Port table ── */
+.port-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+.port-table th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--border2);}
+.port-table td{padding:8px 12px;border-bottom:1px solid rgba(30,41,59,0.3);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;}
+.port-table td:first-child{color:var(--cyan);font-weight:700;}
+.port-table tr:last-child td{border-bottom:none;}
+
+.section-title{font-size:16px;font-weight:700;color:var(--green);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(34,197,94,0.15);}
+.badge{display:inline-block;font-size:9px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;font-weight:700;vertical-align:middle;}
+.badge-green{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+.badge-amber{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.25);}
+.badge-red{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.badge-blue{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+.badge-cyan{background:rgba(6,182,212,0.1);color:var(--cyan);border:1px solid rgba(6,182,212,0.25);}
+.badge-purple{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.25);}
+
+.footer{text-align:center;padding:28px 24px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;margin-top:40px;}
+@media(max-width:800px){.layer-grid.cols-3,.layer-grid.cols-4{grid-template-columns:1fr 1fr;}.layer-grid.cols-2{grid-template-columns:1fr;}}
+@media(max-width:500px){.layer-grid.cols-2,.layer-grid.cols-3,.layer-grid.cols-4{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="dl-banner">
+  <span class="dl-banner-text">⬡ Shadow313 NEXUS · Full Stack Architecture Map · Self-contained</span>
+  <button class="dl-btn" onclick="downloadPage()">⬇ Download This Page</button>
+</div>
+
+<nav class="nav">
+  <div class="nav-hex">S3</div>
+  <div class="nav-brand">SHADOW313 <span>NEXUS</span></div>
+  <div class="nav-right" id="clock"></div>
+</nav>
+
+<div class="hero">
+  <h1>Full Stack <span>Architecture Map</span></h1>
+  <p>How every component connects — Windows host, WSL2, Docker, Ollama, Shadow313 CLI, and the upcoming Hetzner VPN. Includes setup order and port registry.</p>
+</div>
+
+<div class="main">
+
+  <!-- ── SETUP ORDER ── -->
+  <div class="section-title">⬡ Ideal Setup Order</div>
+  <div class="setup-steps">
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.15);color:var(--green)">1</div>
+      <div class="step-title">Windows 11 Pro Base</div>
+      <div class="step-desc">PATH, tools (Git, Python, Node, Nmap, Wireshark, BurpSuite, KeePassXC, ShareX), DNS → Quad9 DoH</div>
+      <span class="step-status badge-green">✅ DONE</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.15);color:var(--green)">2</div>
+      <div class="step-title">WSL2 Engine</div>
+      <div class="step-desc">DISM features, .wslconfig (mirrored networking, 4GB RAM cap), LxssManager service</div>
+      <span class="step-status badge-green">✅ DONE</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.15);color:var(--green)">3</div>
+      <div class="step-title">Ubuntu 24.04</div>
+      <div class="step-desc">wsl --install, DNS fix (9.9.9.9), pip/nmap/git, Shadow313 repo clone, pyspx</div>
+      <span class="step-status badge-amber">⚠ DNS FIX NEEDED</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.15);color:var(--green)">4</div>
+      <div class="step-title">Kali Linux 2026.2</div>
+      <div class="step-desc">wsl --install -d kali-linux, full package install, Metasploit DB, wordlists, DNS fix</div>
+      <span class="step-status badge-amber">⚠ DNS FIX NEEDED</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.15);color:var(--green)">5</div>
+      <div class="step-title">Docker Desktop</div>
+      <div class="step-desc">WSL2 backend, Open WebUI container (port 3000), Shadow313 API (port 8000), PostgreSQL</div>
+      <span class="step-status badge-amber">⚠ NEEDS RESTART</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.15);color:var(--green)">6</div>
+      <div class="step-title">Ollama + Models</div>
+      <div class="step-desc">ollama serve, pull llama3.2:3b / mistral:7b / codellama:7b / shadow313-nexus, Open WebUI connection</div>
+      <span class="step-status badge-green">✅ DONE</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(59,130,246,0.15);color:var(--blue)">7</div>
+      <div class="step-title">Shadow313 CLI v4</div>
+      <div class="step-desc">pip install -e .[full], 2858 tests GREEN, 313-BIND active, FIPS 203/204/205</div>
+      <span class="step-status badge-green">✅ DONE</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(167,139,250,0.15);color:var(--purple)">8</div>
+      <div class="step-title">Hetzner VPN</div>
+      <div class="step-desc">€3.29/mo VPS, WireGuard server, kill-switch, bug bounty tools, NOT needed for local dev</div>
+      <span class="step-status badge-blue">⏳ NEXT</span>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(245,158,11,0.15);color:var(--amber)">9</div>
+      <div class="step-title">Telegram Bot</div>
+      <div class="step-desc">@BotFather token, TELEGRAM_BOT_TOKEN + CHAT_ID in .env, docker compose --profile telegram up</div>
+      <span class="step-status badge-blue">⏳ READY TO DEPLOY</span>
+    </div>
+  </div>
+
+  <!-- ── LAYER 1: INTERNET / CLOUD ── -->
+  <div class="layer" style="border-color:rgba(100,116,139,0.3)">
+    <div class="layer-header" style="background:rgba(15,23,42,0.8);color:var(--muted)">
+      ☁️ INTERNET / CLOUD LAYER
+    </div>
+    <div class="layer-body">
+      <div class="layer-grid cols-4">
+        <div class="comp">
+          <div class="comp-title">🤖 Claude (Anthropic)</div>
+          <div class="comp-sub">api.anthropic.com:443<br>This chat. No security data sent.</div>
+          <span class="comp-port">HTTPS · TLS 1.3</span>
+        </div>
+        <div class="comp">
+          <div class="comp-title">🐙 GitHub</div>
+          <div class="comp-sub">github.com:443<br>piyyy314/Shadow313-Nexus<br>CI/CD via Actions</div>
+          <span class="comp-port">HTTPS · git push/pull</span>
+        </div>
+        <div class="comp">
+          <div class="comp-title">🦙 Ollama Registry</div>
+          <div class="comp-sub">ollama.com:443<br>matarmohamad313/shadow313-nexus<br>Model pull only</div>
+          <span class="comp-port">HTTPS · model download</span>
+        </div>
+        <div class="comp">
+          <div class="comp-title">🌐 IPFS Network</div>
+          <div class="comp-sub">ipfs.io:443<br>313-BIND receipt anchoring<br>Public hashes only</div>
+          <span class="comp-port">HTTPS · opt-in</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <span class="arrow-label">WireGuard UDP:51820 (encrypted tunnel)</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">HTTPS:443 (direct)</span>
+  </div>
+
+  <!-- ── LAYER 2: HETZNER VPN ── -->
+  <div class="layer" style="border-color:rgba(167,139,250,0.3)">
+    <div class="layer-header" style="background:rgba(167,139,250,0.08);color:var(--purple)">
+      🖥️ HETZNER VPS — €3.29/mo · CX22 · Helsinki · NEXT TO SET UP
+    </div>
+    <div class="layer-body">
+      <div class="layer-grid cols-3">
+        <div class="comp" style="border-color:rgba(167,139,250,0.2)">
+          <div class="comp-status status-blue"></div>
+          <div class="comp-title">🔐 WireGuard Server</div>
+          <div class="comp-sub">wg0 interface<br>10.8.0.1/24 VPN subnet<br>Kill-switch for clients<br>Port 51820 UDP</div>
+          <span class="comp-port">UDP:51820</span>
+        </div>
+        <div class="comp" style="border-color:rgba(167,139,250,0.2)">
+          <div class="comp-status status-blue"></div>
+          <div class="comp-title">🛡️ Hardening Stack</div>
+          <div class="comp-sub">UFW firewall<br>fail2ban<br>Suricata IDS<br>Wazuh agent<br>Honeypot tripwires</div>
+          <span class="comp-port">SSH:22 (key-only)</span>
+        </div>
+        <div class="comp" style="border-color:rgba(167,139,250,0.2)">
+          <div class="comp-status status-blue"></div>
+          <div class="comp-title">🔍 Bug Bounty Tools</div>
+          <div class="comp-sub">Nuclei, subfinder<br>httpx, amass<br>Remote scan targets<br>Results → local Shadow313</div>
+          <span class="comp-port">Internal only</span>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:8px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+        ⚠️ NOT NEEDED for local Shadow313 development. Set up AFTER Ubuntu/Kali/Docker are stable.
+        Purpose: IP masking for bug bounty recon, remote scan infrastructure, VPN for mobile devices.
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <span class="arrow-label">WireGuard client tunnel</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">All traffic encrypted</span>
+  </div>
+
+  <!-- ── LAYER 3: WINDOWS HOST ── -->
+  <div class="layer" style="border-color:rgba(34,197,94,0.3)">
+    <div class="layer-header" style="background:rgba(34,197,94,0.08);color:var(--green)">
+      🪟 WINDOWS 11 PRO HOST — Dell Latitude 5490 · 16GB RAM · 476GB SSD
+    </div>
+    <div class="layer-body">
+      <div class="layer-grid cols-4">
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">🦙 Ollama Engine</div>
+          <div class="comp-sub">localhost:11434<br>4 models loaded<br>CPU inference<br>~13.3GB storage</div>
+          <span class="comp-port">HTTP:11434</span>
+        </div>
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">🔐 WireGuard Client</div>
+          <div class="comp-sub">wg0 tunnel<br>→ Hetzner VPS<br>Kill-switch capable<br>UDP:51820</div>
+          <span class="comp-port">UDP:51820 outbound</span>
+        </div>
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">🔍 Burp Suite 2026</div>
+          <div class="comp-sub">localhost:8080<br>HTTP proxy<br>Web app testing<br>Configure browser → 8080</div>
+          <span class="comp-port">HTTP:8080</span>
+        </div>
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">🔒 Quad9 DoH DNS</div>
+          <div class="comp-sub">9.9.9.9:443<br>149.112.112.112<br>Encrypted DNS<br>Malware blocking</div>
+          <span class="comp-port">DoH:443</span>
+        </div>
+      </div>
+      <div style="margin-top:10px" class="layer-grid cols-3">
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">🐳 Docker Desktop</div>
+          <div class="comp-sub">WSL2 backend<br>Manages all containers<br>host.docker.internal gateway</div>
+          <span class="comp-port">host.docker.internal</span>
+        </div>
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">💻 VS Code</div>
+          <div class="comp-sub">Remote WSL extension<br>Opens Ubuntu/Kali files<br>Python + Docker extensions</div>
+          <span class="comp-port">Local editor</span>
+        </div>
+        <div class="comp">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">📁 shadow313-nexus/</div>
+          <div class="comp-sub">C:\Users\shiatoali\shadow313-nexus<br>939 files · git repo<br>Synced with GitHub</div>
+          <span class="comp-port">Local filesystem</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <span class="arrow-label">WSL2 hypervisor (Hyper-V)</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">Shared filesystem /mnt/c/</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">host.docker.internal:11434</span>
+  </div>
+
+  <!-- ── LAYER 4: WSL2 ── -->
+  <div class="layer" style="border-color:rgba(245,158,11,0.3)">
+    <div class="layer-header" style="background:rgba(245,158,11,0.08);color:var(--amber)">
+      🐧 WSL2 LAYER — .wslconfig: memory=4GB · networkingMode=mirrored · dnsTunneling=true
+    </div>
+    <div class="layer-body">
+      <div class="layer-grid cols-2">
+        <div class="comp" style="border-color:rgba(245,158,11,0.2)">
+          <div class="comp-status status-amber"></div>
+          <div class="comp-title">🐧 Ubuntu 24.04 LTS</div>
+          <div class="comp-sub">
+            User: shiatoali<br>
+            Python 3.12 · pip · nmap · git<br>
+            Shadow313 CLI v4 (pip install -e .)<br>
+            pyspx · scapy · fastapi · uvicorn<br>
+            DNS: 9.9.9.9 / 8.8.8.8 (fixed)<br>
+            /mnt/c/Users/shiatoali/shadow313-nexus
+          </div>
+          <span class="comp-port">wsl -d Ubuntu-24.04</span>
+          <div style="margin-top:8px;padding:6px 8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:6px;font-size:10px;color:var(--red);font-family:'JetBrains Mono',monospace;">
+            ⚠ DNS FIX NEEDED: run fix-wsl-docker-dns.ps1
+          </div>
+        </div>
+        <div class="comp" style="border-color:rgba(245,158,11,0.2)">
+          <div class="comp-status status-amber"></div>
+          <div class="comp-title">🐉 Kali Linux 2026.2</div>
+          <div class="comp-sub">
+            User: shia313<br>
+            Metasploit Framework · PostgreSQL<br>
+            nmap 7.99 · wordlists · SecLists<br>
+            pwntools · impacket · scapy<br>
+            DNS: 9.9.9.9 / 8.8.8.8 (fixed)<br>
+            Bug bounty + red team tools
+          </div>
+          <span class="comp-port">wsl -d kali-linux</span>
+          <div style="margin-top:8px;padding:6px 8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:6px;font-size:10px;color:var(--red);font-family:'JetBrains Mono',monospace;">
+            ⚠ DNS FIX NEEDED: run fix-wsl-docker-dns.ps1
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <span class="arrow-label">Docker socket</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">Container networking</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">Ollama via host.docker.internal:11434</span>
+  </div>
+
+  <!-- ── LAYER 5: DOCKER CONTAINERS ── -->
+  <div class="layer" style="border-color:rgba(6,182,212,0.3)">
+    <div class="layer-header" style="background:rgba(6,182,212,0.08);color:var(--cyan)">
+      🐳 DOCKER CONTAINERS — Network: shadow313_net · WSL2 backend
+    </div>
+    <div class="layer-body">
+      <div class="layer-grid cols-3">
+        <div class="comp" style="border-color:rgba(6,182,212,0.2)">
+          <div class="comp-status status-green"></div>
+          <div class="comp-title">💬 Open WebUI</div>
+          <div class="comp-sub">
+            ghcr.io/open-webui/open-webui:main<br>
+            ChatGPT-like UI for Ollama<br>
+            Connects → host.docker.internal:11434<br>
+            Volume: open-webui:/app/backend/data
+          </div>
+          <span class="comp-port">localhost:3000</span>
+        </div>
+        <div class="comp" style="border-color:rgba(6,182,212,0.2)">
+          <div class="comp-status status-amber"></div>
+          <div class="comp-title">⚡ Shadow313 API</div>
+          <div class="comp-sub">
+            FastAPI event bus<br>
+            6 routes · 313-BIND receipts<br>
+            NEXUS detection pipeline<br>
+            Audit server · SARIF export
+          </div>
+          <span class="comp-port">localhost:8000</span>
+        </div>
+        <div class="comp" style="border-color:rgba(6,182,212,0.2)">
+          <div class="comp-status status-amber"></div>
+          <div class="comp-title">📱 Telegram Bot</div>
+          <div class="comp-sub">
+            shadow313.integrations.telegram<br>
+            Polls shadow313-api:8000/api/events<br>
+            Forwards HIGH/CRITICAL alerts<br>
+            Profile: --profile telegram
+          </div>
+          <span class="comp-port">No port (outbound only)</span>
+        </div>
+      </div>
+      <div style="margin-top:10px" class="layer-grid cols-2">
+        <div class="comp" style="border-color:rgba(6,182,212,0.2)">
+          <div class="comp-status status-amber"></div>
+          <div class="comp-title">🗄️ PostgreSQL</div>
+          <div class="comp-sub">
+            Metasploit database backend<br>
+            Initialized in Kali WSL2<br>
+            msf / msf_test databases
+          </div>
+          <span class="comp-port">localhost:5432</span>
+        </div>
+        <div class="comp" style="border-color:rgba(6,182,212,0.2)">
+          <div class="comp-status status-amber"></div>
+          <div class="comp-title">🌐 Nginx (HTTPS)</div>
+          <div class="comp-sub">
+            Reverse proxy for Shadow313 API<br>
+            SSL: docker/nginx/shadow313.crt<br>
+            Ports 7313 (HTTP) / 7314 (HTTPS)
+          </div>
+          <span class="comp-port">localhost:7313 / 7314</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <span class="arrow-label">pip install -e .[full]</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">shadow313 CLI commands</span>
+    <span class="arrow">↕</span>
+    <span class="arrow-label">313-BIND receipts → IPFS</span>
+  </div>
+
+  <!-- ── LAYER 6: SHADOW313 CLI ── -->
+  <div class="layer" style="border-color:rgba(34,197,94,0.4)">
+    <div class="layer-header" style="background:rgba(34,197,94,0.1);color:var(--green)">
+      ⬡ SHADOW313 CLI v4.0.0 — 2,858 tests GREEN · 29 detectors · POSTURE GREEN
+    </div>
+    <div class="layer-body">
+      <div class="layer-grid cols-4">
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title" style="color:var(--green)">V1 Core (9 modules)</div>
+          <div class="comp-sub">recon · vuln · exploit<br>network · defense · quantum<br>plugins · cicd · docs</div>
+        </div>
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title" style="color:var(--cyan)">V2 Advanced (13)</div>
+          <div class="comp-sub">RAG · agent · EPSS/KEV<br>ATT&CK · ML anomaly<br>JA3 · campaign · graph</div>
+        </div>
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title" style="color:var(--amber)">V3 Extended (10)</div>
+          <div class="comp-sub">browser-recon · container<br>AD auditor · SIEM<br>LSTM · malware sandbox</div>
+        </div>
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title" style="color:var(--purple)">V4 NEXUS (28)</div>
+          <div class="comp-sub">313-BIND · Ghost-Watch<br>VSAT · CEQS · QE-BIM<br>AEON · NVL72 · C-SBOM</div>
+        </div>
+      </div>
+      <div style="margin-top:10px" class="layer-grid cols-3">
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title">🔐 313-BIND Protocol</div>
+          <div class="comp-sub">ts...313 nanosecond entropy<br>SLH-DSA (FIPS 205) signing<br>SHA3-512 chain hash<br>IPFS anchor (opt-in)</div>
+        </div>
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title">🛡️ PQC Stack</div>
+          <div class="comp-sub">ML-KEM-768 (FIPS 203)<br>ML-DSA-65 (FIPS 204)<br>SLH-DSA (FIPS 205)<br>AES-256-GCM · Argon2id</div>
+        </div>
+        <div class="comp" style="border-color:rgba(34,197,94,0.2)">
+          <div class="comp-title">👁️ Ghost-Watch CADL</div>
+          <div class="comp-sub">L1 Monitor → L5 Neutralize<br>WE-FORGE lure docs<br>AETHER decoy traffic<br>CHRONOS reversion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PORT REGISTRY ── -->
+  <div style="margin-top:32px">
+    <div class="section-title">⬡ Port &amp; Service Registry</div>
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;">
+      <table class="port-table">
+        <thead>
+          <tr><th>Port</th><th>Service</th><th>Protocol</th><th>Direction</th><th>Trust Zone</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>11434</td><td>Ollama AI Engine</td><td>HTTP</td><td>Internal</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Bound to 127.0.0.1 — never expose externally</td></tr>
+          <tr><td>3000</td><td>Open WebUI</td><td>HTTP</td><td>Internal</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Docker container — localhost access only</td></tr>
+          <tr><td>8000</td><td>Shadow313 FastAPI</td><td>HTTP</td><td>Internal</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Audit server + event bus REST API</td></tr>
+          <tr><td>8080</td><td>Burp Suite Proxy</td><td>HTTP</td><td>Intercept</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Configure browser proxy → 127.0.0.1:8080</td></tr>
+          <tr><td>5432</td><td>PostgreSQL (Metasploit)</td><td>TCP</td><td>Internal</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Kali Linux Metasploit database</td></tr>
+          <tr><td>7313</td><td>Shadow313 HTTP</td><td>HTTP</td><td>Internal</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Nginx reverse proxy (HTTP)</td></tr>
+          <tr><td>7314</td><td>Shadow313 HTTPS</td><td>TLS 1.3</td><td>Internal</td><td><span class="badge badge-green">LOCAL ONLY</span></td><td>Nginx reverse proxy (HTTPS)</td></tr>
+          <tr><td>51820</td><td>WireGuard VPN</td><td>UDP</td><td>Outbound</td><td><span class="badge badge-purple">ENCRYPTED</span></td><td>Tunnel to Hetzner VPS — or port 443 obfuscated</td></tr>
+          <tr><td>443</td><td>HTTPS (various)</td><td>TLS 1.3</td><td>Outbound</td><td><span class="badge badge-cyan">INTERNET</span></td><td>Claude, GitHub, Ollama.com, IPFS, Quad9 DoH</td></tr>
+          <tr><td>9.9.9.9</td><td>Quad9 DNS-over-HTTPS</td><td>DoH</td><td>Outbound</td><td><span class="badge badge-cyan">ENCRYPTED</span></td><td>All DNS queries encrypted — malware blocking</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── DEPENDENCY MAP ── -->
+  <div style="margin-top:32px">
+    <div class="section-title">⬡ What Depends on What</div>
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2;color:var(--muted);">
+      <div><span style="color:var(--green)">Shadow313 CLI</span> → requires: Python 3.12, pyspx, cryptography, scapy (optional)</div>
+      <div><span style="color:var(--cyan)">Open WebUI</span> → requires: Docker Desktop + Ollama running on host:11434</div>
+      <div><span style="color:var(--cyan)">Shadow313 API</span> → requires: Docker Desktop + shadow313 Python package</div>
+      <div><span style="color:var(--cyan)">Telegram Bot</span> → requires: Docker Desktop + Shadow313 API healthy + BOT_TOKEN + CHAT_ID</div>
+      <div><span style="color:var(--amber)">Ubuntu apt-get</span> → requires: WSL2 DNS fix (networkingMode=mirrored + 9.9.9.9)</div>
+      <div><span style="color:var(--amber)">Kali tools</span> → requires: WSL2 DNS fix + Kali package install</div>
+      <div><span style="color:var(--purple)">Hetzner VPN</span> → requires: nothing local — independent VPS setup</div>
+      <div><span style="color:var(--purple)">Bug bounty recon</span> → requires: Hetzner VPN (for IP masking) + Kali tools</div>
+      <div><span style="color:var(--green)">313-BIND IPFS anchor</span> → requires: internet access (opt-in) or local-only mode</div>
+      <div><span style="color:var(--green)">GitHub CI/CD</span> → requires: git push + GitHub Actions (vercel.json valid)</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Shadow313 NEXUS v4.0.0 · Architecture Map · Ottawa, ON, Canada · matarmohamad313@duck.com · 313-BIND Active
+</div>
+
+<script>
+function downloadPage(){const h=document.documentElement.outerHTML;const b=new Blob([h],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='shadow313-ai-stack-map.html';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);}
+function updateClock(){document.getElementById('clock').textContent=new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';}
+updateClock();setInterval(updateClock,1000);
+</script>
+</body>
+</html>
