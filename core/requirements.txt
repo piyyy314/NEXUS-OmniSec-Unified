@@ -28,7 +28,7 @@ pandas>=2.2.0
 # System Forensics, Blue Team & OS Monitoring
 psutil>=5.9.8
 rich>=13.7.1
-click>=8.1.7
+click>=8.5.0
 
 # Testing & Linting
 pytest>=9.1.1
