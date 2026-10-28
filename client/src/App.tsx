@@ -12,6 +12,10 @@ import { AegisDashboard } from './modules/aegis/AegisDashboard';
 import { GhostWatchView } from './modules/ghostwatch/GhostWatchView';
 import { NexusEngineView } from './modules/nexus/NexusEngineView';
 import { ModelLabView } from './modules/modellab/ModelLabView';
+import { AdvToolkitView } from './modules/advtoolkit/AdvToolkitView';
+import { AegisPqcView } from './modules/aegispqc/AegisPqcView';
+import { SatExpertView } from './modules/satexpert/SatExpertView';
+import { ApexQuantumView } from './modules/apex/ApexQuantumView';
 
 export default function App() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceId>('aegis');
@@ -21,10 +25,16 @@ export default function App() {
     switch (activeWorkspace) {
       case 'aegis':
         return <AegisDashboard />;
+      case 'adv_toolkit':
+        return <AdvToolkitView />;
+      case 'aegis_pqc':
+        return <AegisPqcView />;
+      case 'satexpert':
+        return <SatExpertView />;
       case 'ghostwatch':
         return <GhostWatchView initialModule="rf_spectrum" />;
-      case 'satcom':
-        return <GhostWatchView initialModule="satcom_telemetry" />;
+      case 'apex_quantum':
+        return <ApexQuantumView />;
       case 'nexus':
         return <NexusEngineView />;
       case 'modellab':

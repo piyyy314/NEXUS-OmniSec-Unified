@@ -23,7 +23,15 @@ import {
 } from 'lucide-react';
 import { soundFx } from '../../utils/audio';
 
-export type WorkspaceId = 'aegis' | 'ghostwatch' | 'satcom' | 'nexus' | 'modellab';
+export type WorkspaceId = 
+  | 'aegis' 
+  | 'adv_toolkit' 
+  | 'aegis_pqc' 
+  | 'satexpert' 
+  | 'ghostwatch' 
+  | 'apex_quantum' 
+  | 'nexus' 
+  | 'modellab';
 
 interface UnifiedHeaderProps {
   activeWorkspace: WorkspaceId;
@@ -50,9 +58,12 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const navItems: { id: WorkspaceId; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string }[] = [
     { id: 'aegis', label: 'Aegis Sentinel', icon: Shield, badge: 'DEFENSE' },
+    { id: 'adv_toolkit', label: 'Advanced Toolkit', icon: Cpu, badge: '24 MODS' },
+    { id: 'aegis_pqc', label: 'Aegis PQC Suite', icon: Lock, badge: 'FIPS 203' },
+    { id: 'satexpert', label: 'SatExpert TSI v6', icon: Satellite, badge: '79 MODS' },
     { id: 'ghostwatch', label: 'Ghost-Watch C2', icon: Radio, badge: 'SIGINT' },
-    { id: 'satcom', label: 'SatCom Link', icon: Satellite, badge: 'ORBITAL' },
-    { id: 'nexus', label: 'Shadow313 Core', icon: Lock, badge: 'PQC 205' },
+    { id: 'apex_quantum', label: 'Apex Quantum Vault', icon: Layers, badge: 'TENSOR' },
+    { id: 'nexus', label: 'Shadow313 Core', icon: Terminal, badge: '29 DETECTORS' },
     { id: 'modellab', label: 'Model Lab', icon: BarChart2, badge: 'AI COST' },
   ];
 
