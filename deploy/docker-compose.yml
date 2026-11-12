@@ -226,12 +226,13 @@ services:
     expose:
       - "8313"
     volumes:
-      - shadow313_data:/home/shadow313/.shadow313:ro  # Read-only for API
+      - shadow313_data:/home/shadow313/.shadow313:rw  # SQLite event database
     environment:
       - SHADOW313_AI_ENDPOINT=http://ollama:11434
       - SHADOW313_AI_BACKEND=ollama
       - SHADOW313_AI_MODEL=matarmohamad313/shadow313-nexus
       - SHADOW313_API_KEY=${SHADOW313_API_KEY:?SHADOW313_API_KEY must be set}
+      - SHADOW313_EVENTS_DB=/home/shadow313/.shadow313/events.sqlite3
     depends_on:
       ollama:
         condition: service_healthy
