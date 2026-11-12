@@ -52,7 +52,7 @@ services:
     networks:
       - shadow313_internal
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -84,7 +84,7 @@ services:
       - TELEGRAM_MIN_SEVERITY=${TELEGRAM_MIN_SEVERITY:-HIGH}
       - TELEGRAM_POLL_INTERVAL=${TELEGRAM_POLL_INTERVAL:-10}
       - SHADOW313_AI_BACKEND=disabled
-    command: ["python", "-m", "shadow313.integrations.telegram.bot"]
+    command: ["-m", "shadow313.integrations.telegram.bot"]
     networks:
       - shadow313_internal
     profiles:
@@ -152,7 +152,7 @@ services:
       - shadow313_internal
       - shadow313_external
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -219,7 +219,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=100m,mode=1777
-    command: ["python", "-m", "shadow313.api.server",
+    command: ["-m", "shadow313.api.server",
               "--host", "0.0.0.0", "--port", "8313"]
     # Only expose to nginx — not directly to host
     expose:
@@ -268,7 +268,7 @@ services:
     networks:
       - shadow313_internal   # Internal only
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/v1/heartbeat"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
