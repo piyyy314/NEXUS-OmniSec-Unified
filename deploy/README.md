@@ -43,7 +43,7 @@ The first startup pulls the configured Ollama model and can take time and substa
 - Web interface alternate listener: `http://127.0.0.1:8080/`
 - API through Nginx: `http://127.0.0.1/nexus-api/`
 
-Protected API routes require the `X-API-Key` header using `SHADOW313_API_KEY`. The public liveness endpoint is `/nexus-api/health`. Detection matches from `POST /nexus-api/api/detect` are recorded in a bounded in-memory event feed at `GET /nexus-api/api/events`; the optional Telegram service polls that feed using the same API key.
+Protected API routes require the `X-API-Key` header using `SHADOW313_API_KEY`. The public liveness endpoint is `/nexus-api/health`. Detection matches from `POST /nexus-api/api/detect` and positive results from `POST /nexus-api/api/webshell/scan` are recorded in a bounded in-memory event feed at `GET /nexus-api/api/events`; the optional Telegram service polls that feed using the same API key. The API refuses to start without `SHADOW313_API_KEY`.
 
 Use an SSH tunnel or a separately secured VPN/reverse proxy for remote access. Do not expose the API or Ollama ports directly to the public internet.
 
