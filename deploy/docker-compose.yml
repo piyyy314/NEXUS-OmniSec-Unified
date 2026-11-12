@@ -232,7 +232,7 @@ services:
       - SHADOW313_AI_BACKEND=ollama
       - SHADOW313_AI_MODEL=matarmohamad313/shadow313-nexus
       - SHADOW313_API_KEY=${SHADOW313_API_KEY:?SHADOW313_API_KEY must be set}
-      - SHADOW313_EVENTS_DB=/home/shadow313/.shadow313/events.sqlite3
+      - SHADOW313_EVENTS_DB=${SHADOW313_EVENTS_DB:-/home/shadow313/.shadow313/events.sqlite3}
     depends_on:
       ollama:
         condition: service_healthy
