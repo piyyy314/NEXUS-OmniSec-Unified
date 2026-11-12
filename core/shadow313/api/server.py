@@ -17,6 +17,7 @@ Endpoints:
 """
 
 import argparse
+from contextlib import closing
 import sqlite3
 import hashlib
 import hmac
@@ -167,7 +168,7 @@ def create_app(api_key: str | None = None, events_db_path: str | None = None) ->
         connection.execute("PRAGMA busy_timeout = 5000")
         return connection
 
-    with connect_events_db() as connection:
+    with closing(connect_events_db()) as connection, connection:
         connection.execute("PRAGMA journal_mode = WAL")
         connection.execute(
             """CREATE TABLE IF NOT EXISTS security_events (
