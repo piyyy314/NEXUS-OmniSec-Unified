@@ -116,6 +116,7 @@ services:
     entrypoint: ["/bin/sh", "/init.sh"]
     environment:
       - OLLAMA_HOST=http://ollama:11434
+      - SHADOW313_AI_MODEL=matarmohamad313/shadow313-nexus
     networks:
       - shadow313_internal
     restart: "no"
@@ -291,11 +292,9 @@ services:
       - /tmp:size=50m
     ports:
       - "127.0.0.1:80:80"      # Bind to localhost only — use VPN/SSH tunnel for remote
-      - "127.0.0.1:443:443"
       - "127.0.0.1:8080:8080"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
       - nginx_logs:/var/log/nginx
     depends_on:
       - open-webui
