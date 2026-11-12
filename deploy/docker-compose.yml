@@ -52,7 +52,7 @@ services:
     networks:
       - shadow313_internal
     healthcheck:
-      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "OLLAMA_HOST=http://127.0.0.1:11434 ollama list >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -268,7 +268,7 @@ services:
     networks:
       - shadow313_internal   # Internal only
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat', timeout=3)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v2/heartbeat', timeout=3)"]
       interval: 30s
       timeout: 10s
       retries: 3
