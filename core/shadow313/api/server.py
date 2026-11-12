@@ -185,13 +185,28 @@ def create_app(api_key: str | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    # In-memory receipt store (replace with SQLite/Redis in production)
+    # Refuse to start an unauthenticated API. Callers may supply the key
+    # explicitly or configure SHADOW313_API_KEY in the process environment.
+    configured_api_key = api_key or os.environ.get("SHADOW313_API_KEY")
+    if not configured_api_key:
+        raise RuntimeError("SHADOW313_API_KEY must be configured before starting the API")
+
+    # In-memory stores are bounded to prevent unbounded process memory growth.
     _receipts: dict[str, dict] = {}
     _events: deque[dict[str, Any]] = deque(maxlen=1000)
 
     # ── Auth dependency ───────────────────────────────────────────
-    def verify_api_key(x_api_key: str | None = Header(None)):
-        if api_key and x_api_key != api_key:
+    def verify_api_key(
+        request: Request,
+        x_api_key: str | None = Header(None),
+    ):
+        client_ip = request.client.host if request.client else "unknown"
+        _check_global_rate_limit()
+        _check_rate_limit(client_ip)
+
+        if not x_api_key or len(x_api_key) > _MAX_KEY_LENGTH:
+            raise HTTPException(status_code=401, detail="API key required")
+        if not hmac.compare_digest(x_api_key, configured_api_key):
             raise HTTPException(status_code=401, detail="Invalid API key")
         return x_api_key
 
