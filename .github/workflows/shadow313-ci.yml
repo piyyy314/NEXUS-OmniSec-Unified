@@ -37,6 +37,11 @@ jobs:
       - name: Compile Python package
         run: python -m compileall -q core/shadow313
 
+      - name: Run API runtime regression tests
+        env:
+          PYTHONPATH: core
+        run: python -m pytest core/tests/test_api_runtime.py -q
+
       - name: Parse Compose YAML
         run: python -c "import yaml; yaml.safe_load(open('deploy/docker-compose.yml', encoding='utf-8'))"
 
