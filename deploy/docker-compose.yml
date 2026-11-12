@@ -289,9 +289,9 @@ services:
     user: "nginx"
     read_only: true
     tmpfs:
-      - /var/cache/nginx:size=100m
-      - /var/run:size=10m
-      - /tmp:size=50m
+      - /var/cache/nginx:size=100m,mode=1777
+      - /var/run:size=10m,mode=1777
+      - /tmp:size=50m,mode=1777
     ports:
       - "127.0.0.1:80:80"      # Bind to localhost only — use VPN/SSH tunnel for remote
       - "127.0.0.1:8080:8080"
@@ -319,7 +319,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      o: bind,uid=10313,gid=10313  # shadow313 user UID
+      o: bind  # ownership is prepared by deploy/bootstrap.sh
       device: ${SHADOW313_DATA_DIR:-/opt/shadow313/data}
   ollama_data:
     driver: local
