@@ -19,24 +19,19 @@ Endpoints:
 import argparse
 from collections import deque
 import hashlib
+import hmac
 import json
+import logging
 import os
 import secrets
 import time
 from datetime import UTC, datetime
 from typing import Any
 
-import os
-import time
-import hmac
-import hashlib
-from functools import wraps
-from fastapi import HTTPException, Request, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-# ── Simple API Key Auth (replace with JWT in production) ──────────────────
-_API_KEY = os.environ.get("SHADOW313_API_KEY", "")
-_security = HTTPBearer(auto_error=False)
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import uvicorn
 
 # ── Rate limiting (simple in-memory) ─────────────────────────────────────
 _rate_store: dict = {}
@@ -79,44 +74,10 @@ def _check_rate_limit(client_ip: str) -> None:
             _rate_store.pop(k, None)
     if _rate_store[key] > _RATE_LIMIT:
         raise HTTPException(status_code=429, detail="Rate limit exceeded (100 req/min)")
-
-async def verify_api_key(
-    request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(_security)
-) -> str:
-    """Verify API key from Authorization: Bearer <key> header."""
-    client_ip = request.client.host if request.client else "127.0.0.1"
-    _check_rate_limit(client_ip)
-    
-    dev_mode = os.environ.get("SHADOW313_DEV_MODE", "false").lower() == "true"
-    if dev_mode and client_ip in ("127.0.0.1", "::1", "localhost"):
-        return "dev"
-    
-    if not credentials:
-        raise HTTPException(status_code=401, detail="API key required")
-    
-    provided = credentials.credentials
-    
-    # Prevent DoS via extremely long keys
-    if len(provided) > _MAX_KEY_LENGTH:
-        raise HTTPException(status_code=400, detail="API key too long")
-    
-    # Constant-time comparison prevents timing attacks
-    expected = _API_KEY
-    if not hmac.compare_digest(provided.encode(), expected.encode()):
-        raise HTTPException(status_code=403, detail="Invalid API key")
-    
-    return provided
-
-
-from fastapi import Depends, FastAPI, Header, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import uvicorn
+ 
 HAS_FASTAPI = True
 
 from shadow313 import __version__
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -319,6 +280,16 @@ def create_app(api_key: str | None = None) -> FastAPI:
             result = det.scan_access_log(req.content, source=req.file_path or "<api>")
         else:
             result = det.scan_content(req.content, file_path=req.file_path)
+        if result.detected:
+            record_event(
+                "webshell_scan",
+                float(result.score),
+                {
+                    "scan_target": result.scan_target,
+                    "finding_count": len(result.findings),
+                },
+                result.technique,
+            )
         return result.to_dict()
 
     @app.get("/api/attck/coverage")
