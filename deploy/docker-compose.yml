@@ -174,7 +174,9 @@ services:
       target: nexus
     image: piyyy314/shadow313-nexus:4.0.0
     container_name: shadow313-cli
-    restart: unless-stopped
+    restart: "no"
+    profiles:
+      - cli
     user: "shadow313:shadow313"   # Non-root user (defined in Dockerfile)
     read_only: true
     tmpfs:
@@ -182,7 +184,7 @@ services:
       - /home/shadow313/.shadow313/logs:size=100m
     volumes:
       - shadow313_data:/home/shadow313/.shadow313:rw
-      - ./:/workspace:ro            # Read-only source mount
+      - ../:/workspace:ro           # Read-only repository source mount
     environment:
       - SHADOW313_AI_ENDPOINT=http://ollama:11434
       - SHADOW313_AI_BACKEND=ollama
