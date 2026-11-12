@@ -230,7 +230,7 @@ def create_app(api_key: str | None = None) -> FastAPI:
     async def list_events(since: float = 0, limit: int = 50, _: str = Depends(verify_api_key)):
         safe_limit = max(1, min(limit, 200))
         matching = [event for event in _events if event["ts"] > since]
-        return {"count": len(matching), "events": matching[-safe_limit:]}
+        return {"count": len(matching), "events": matching[:safe_limit]}
 
     @app.post("/api/detect")
     async def detect(req: DetectRequest, _: str = Depends(verify_api_key)):
