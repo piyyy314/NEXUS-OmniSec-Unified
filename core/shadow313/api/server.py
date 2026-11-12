@@ -16,6 +16,7 @@ Endpoints:
 """
 
 import argparse
+from collections import deque
 import hashlib
 import json
 import os
@@ -186,12 +187,26 @@ def create_app(api_key: str | None = None) -> FastAPI:
 
     # In-memory receipt store (replace with SQLite/Redis in production)
     _receipts: dict[str, dict] = {}
+    _events: deque[dict[str, Any]] = deque(maxlen=1000)
 
     # ── Auth dependency ───────────────────────────────────────────
     def verify_api_key(x_api_key: str | None = Header(None)):
         if api_key and x_api_key != api_key:
             raise HTTPException(status_code=401, detail="Invalid API key")
         return x_api_key
+
+    def record_event(detector: str, score: float, event: dict[str, Any], technique: str) -> None:
+        severity = "CRITICAL" if score >= 0.90 else "HIGH" if score >= 0.80 else "MEDIUM"
+        _events.append({
+            "event_id": secrets.token_hex(8),
+            "ts": time.time(),
+            "timestamp": datetime.now(UTC).isoformat(),
+            "severity": severity,
+            "source": detector,
+            "message": f"{detector} detector matched an event (score={score:.4f})",
+            "technique": technique,
+            "event": event,
+        })
 
     # ── Routes ────────────────────────────────────────────────────
 
@@ -233,6 +248,12 @@ def create_app(api_key: str | None = None) -> FastAPI:
             ]
         }
 
+    @app.get("/api/events")
+    async def list_events(since: float = 0, limit: int = 50, _: str = Depends(verify_api_key)):
+        safe_limit = max(1, min(limit, 200))
+        matching = [event for event in _events if event["ts"] > since]
+        return {"count": len(matching), "events": matching[-safe_limit:]}
+
     @app.post("/api/detect")
     async def detect(req: DetectRequest, _: str = Depends(verify_api_key)):
         results = {}
@@ -262,6 +283,10 @@ def create_app(api_key: str | None = None) -> FastAPI:
                 }
             except Exception as e:
                 results["lolbin"] = {"error": str(e)}
+
+        for detector, result in results.items():
+            if result.get("detected"):
+                record_event(detector, float(result.get("score", 0)), req.event, result.get("technique", ""))
 
         return {
             "event":     req.event,
