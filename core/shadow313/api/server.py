@@ -9,6 +9,7 @@ Endpoints:
   POST /api/scan/recon      — run recon scan
   POST /api/scan/vuln       — run vuln scan
   POST /api/detect          — run detection on event
+  GET  /api/events          — read recent detection events (API key required)
   POST /api/webshell/scan   — scan content for web shells
   GET  /api/attck/coverage  — ATT&CK coverage summary
   POST /api/bind/create     — create 313-BIND receipt
@@ -194,6 +195,7 @@ def create_app(api_key: str | None = None) -> FastAPI:
     # In-memory stores are bounded to prevent unbounded process memory growth.
     _receipts: dict[str, dict] = {}
     _events: deque[dict[str, Any]] = deque(maxlen=1000)
+    _max_receipts = 1000
 
     # ── Auth dependency ───────────────────────────────────────────
     def verify_api_key(
@@ -375,6 +377,8 @@ def create_app(api_key: str | None = None) -> FastAPI:
             "app_id":              "shadow313-nexus-api",
             "app_version":         __version__,
         }
+        if len(_receipts) >= _max_receipts:
+            _receipts.pop(next(iter(_receipts)))
         _receipts[bind_id] = receipt
         return receipt
 
@@ -401,7 +405,7 @@ def main():
     parser.add_argument("--host",    default="127.0.0.1", help="Bind host")
     parser.add_argument("--port",    default=8313, type=int, help="Bind port")
     parser.add_argument("--reload",  action="store_true",   help="Auto-reload on change")
-    parser.add_argument("--api-key", default=None,          help="API key (optional)")
+    parser.add_argument("--api-key", default=None,          help="API key (or set SHADOW313_API_KEY)")
     args = parser.parse_args()
 
     if not HAS_FASTAPI:
@@ -412,9 +416,9 @@ def main():
     app = create_app(api_key=api_key)
 
     print(f"Shadow313 NEXUS API v{__version__}")
-    logger.debug("  Listening: http://{args.host}:{args.port}")
-    logger.debug("  Docs:      http://{args.host}:{args.port}/api/docs")
-    logger.debug("  Auth:      {'API key required' if api_key else 'No auth (dev mode)'}")
+    logger.debug(f"  Listening: http://{args.host}:{args.port}")
+    logger.debug(f"  Docs:      http://{args.host}:{args.port}/api/docs")
+    logger.debug(f"  Auth:      {'API key required' if api_key else 'No auth (dev mode)'}")
 
     uvicorn.run(
         app,
