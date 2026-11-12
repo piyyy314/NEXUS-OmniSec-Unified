@@ -17,7 +17,7 @@ Endpoints:
 """
 
 import argparse
-from collections import deque
+import sqlite3
 import hashlib
 import hmac
 import json
@@ -120,7 +120,7 @@ if HAS_FASTAPI:
 
 # ── App factory ───────────────────────────────────────────────────
 
-def create_app(api_key: str | None = None) -> FastAPI:
+def create_app(api_key: str | None = None, events_db_path: str | None = None) -> FastAPI:
     if not HAS_FASTAPI:
         raise ImportError("fastapi and uvicorn are required: pip install fastapi uvicorn")
 
@@ -153,10 +153,38 @@ def create_app(api_key: str | None = None) -> FastAPI:
     if not configured_api_key:
         raise RuntimeError("SHADOW313_API_KEY must be configured before starting the API")
 
-    # In-memory stores are bounded to prevent unbounded process memory growth.
+    # Receipts remain process-local; security events are durable across restarts.
     _receipts: dict[str, dict] = {}
-    _events: deque[dict[str, Any]] = deque(maxlen=1000)
     _max_receipts = 1000
+    db_path = events_db_path or os.environ.get(
+        "SHADOW313_EVENTS_DB", "/home/shadow313/.shadow313/events.sqlite3"
+    )
+    os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
+
+    def connect_events_db() -> sqlite3.Connection:
+        connection = sqlite3.connect(db_path, timeout=5)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA busy_timeout = 5000")
+        return connection
+
+    with connect_events_db() as connection:
+        connection.execute("PRAGMA journal_mode = WAL")
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS security_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL UNIQUE,
+                ts REAL NOT NULL,
+                timestamp TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                source TEXT NOT NULL,
+                message TEXT NOT NULL,
+                technique TEXT NOT NULL,
+                event_json TEXT NOT NULL
+            )"""
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_security_events_ts ON security_events(ts, id)"
+        )
 
     # ── Auth dependency ───────────────────────────────────────────
     def verify_api_key(
@@ -175,7 +203,7 @@ def create_app(api_key: str | None = None) -> FastAPI:
 
     def record_event(detector: str, score: float, event: dict[str, Any], technique: str) -> None:
         severity = "CRITICAL" if score >= 0.90 else "HIGH" if score >= 0.80 else "MEDIUM"
-        _events.append({
+        item = {
             "event_id": secrets.token_hex(8),
             "ts": time.time(),
             "timestamp": datetime.now(UTC).isoformat(),
@@ -184,7 +212,22 @@ def create_app(api_key: str | None = None) -> FastAPI:
             "message": f"{detector} detector matched an event (score={score:.4f})",
             "technique": technique,
             "event": event,
-        })
+        }
+        with connect_events_db() as connection:
+            connection.execute(
+                """INSERT INTO security_events
+                   (event_id, ts, timestamp, severity, source, message, technique, event_json)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    item["event_id"], item["ts"], item["timestamp"], item["severity"],
+                    item["source"], item["message"], item["technique"],
+                    json.dumps(item["event"], default=str),
+                ),
+            )
+            connection.execute(
+                """DELETE FROM security_events WHERE id NOT IN
+                   (SELECT id FROM security_events ORDER BY id DESC LIMIT 10000)"""
+            )
 
     # ── Routes ────────────────────────────────────────────────────
 
@@ -229,8 +272,25 @@ def create_app(api_key: str | None = None) -> FastAPI:
     @app.get("/api/events")
     async def list_events(since: float = 0, limit: int = 50, _: str = Depends(verify_api_key)):
         safe_limit = max(1, min(limit, 200))
-        matching = [event for event in _events if event["ts"] > since]
-        return {"count": len(matching), "events": matching[:safe_limit]}
+        with connect_events_db() as connection:
+            count = connection.execute(
+                "SELECT COUNT(*) FROM security_events WHERE ts > ?", (since,)
+            ).fetchone()[0]
+            rows = connection.execute(
+                """SELECT event_id, ts, timestamp, severity, source, message, technique, event_json
+                   FROM security_events WHERE ts > ? ORDER BY ts ASC, id ASC LIMIT ?""",
+                (since, safe_limit),
+            ).fetchall()
+        events = [
+            {
+                "event_id": row["event_id"], "ts": row["ts"],
+                "timestamp": row["timestamp"], "severity": row["severity"],
+                "source": row["source"], "message": row["message"],
+                "technique": row["technique"], "event": json.loads(row["event_json"]),
+            }
+            for row in rows
+        ]
+        return {"count": count, "events": events}
 
     @app.post("/api/detect")
     async def detect(req: DetectRequest, _: str = Depends(verify_api_key)):
