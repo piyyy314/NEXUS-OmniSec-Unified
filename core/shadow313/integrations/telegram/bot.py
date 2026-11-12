@@ -10,7 +10,7 @@ to a Telegram chat. Runs as a lightweight asyncio service inside Docker.
 Environment variables (set in docker-compose.yml or .env):
   TELEGRAM_BOT_TOKEN      — Bot token from @BotFather
   TELEGRAM_CHAT_ID        — Target chat/channel ID (e.g. -1001234567890)
-  SHADOW313_API_URL        — FastAPI event bus (default: http://shadow313-api:8000)
+  SHADOW313_API_URL        — FastAPI event bus (default: http://shadow313-api:8313)
   TELEGRAM_MIN_SEVERITY   — Minimum severity: LOW|MEDIUM|HIGH|CRITICAL (default: HIGH)
   TELEGRAM_POLL_INTERVAL  — Seconds between polls (default: 10)
 
