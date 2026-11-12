@@ -65,6 +65,13 @@ jobs:
           file: deploy/Dockerfile
           target: nexus
           push: false
+          load: true
           tags: shadow313-nexus:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke-test Python package and API factory
+        run: docker run --rm --entrypoint python shadow313-nexus:ci -c "import shadow313; from shadow313.api.server import create_app; create_app(api_key='ci-validation-key'); print(shadow313.__version__)"
+
+      - name: Smoke-test CLI entry point
+        run: docker run --rm shadow313-nexus:ci -m shadow313.cli.main --help
