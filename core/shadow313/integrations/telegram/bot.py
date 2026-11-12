@@ -23,6 +23,7 @@ Quick start:
 
 import asyncio
 import json
+import html
 import logging
 import os
 import time
@@ -36,6 +37,7 @@ logger = logging.getLogger("shadow313.telegram")
 BOT_TOKEN       = os.getenv("TELEGRAM_BOT_TOKEN", "")
 CHAT_ID         = os.getenv("TELEGRAM_CHAT_ID", "")
 API_URL         = os.getenv("SHADOW313_API_URL", "http://shadow313-api:8313")
+API_KEY         = os.getenv("SHADOW313_API_KEY", "")
 MIN_SEVERITY    = os.getenv("TELEGRAM_MIN_SEVERITY", "HIGH").upper()
 POLL_INTERVAL   = int(os.getenv("TELEGRAM_POLL_INTERVAL", "10"))
 
@@ -86,16 +88,16 @@ def send_alert(event: dict) -> None:
     technique = event.get("technique", event.get("tid", ""))
 
     lines = [
-        f"{emoji} <b>Shadow313 NEXUS — {severity}</b>",
-        f"<code>[{str(ts)[:19]}]</code>",
+        f"{emoji} <b>Shadow313 NEXUS — {html.escape(str(severity))}</b>",
+        f"<code>[{html.escape(str(ts)[:19])}]</code>",
         "",
-        f"<b>Source:</b> {source}",
-        f"<b>Alert:</b> {message}",
+        f"<b>Source:</b> {html.escape(str(source))}",
+        f"<b>Alert:</b> {html.escape(str(message))}",
     ]
     if technique:
-        lines.append(f"<b>ATT&amp;CK:</b> <code>{technique}</code>")
+        lines.append(f"<b>ATT&amp;CK:</b> <code>{html.escape(str(technique))}</code>")
     if bind_id:
-        lines.append(f"<b>313-BIND:</b> <code>{bind_id}</code>")
+        lines.append(f"<b>313-BIND:</b> <code>{html.escape(str(bind_id))}</code>")
 
     result = send_message("\n".join(lines))
     if result and result.get("ok"):
@@ -106,7 +108,7 @@ def send_alert(event: dict) -> None:
 
 def _fetch_events(since_ts: float) -> list:
     url = f"{API_URL}/api/events?since={since_ts}&limit=50"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "X-API-Key": API_KEY})
     try:
         with urllib.request.urlopen(req, timeout=8) as resp:
             data = json.loads(resp.read())
@@ -143,6 +145,9 @@ async def run_bot() -> None:
         return
     if not CHAT_ID:
         logger.error("TELEGRAM_CHAT_ID is not set. Set it in .env or docker-compose.yml")
+        return
+    if not API_KEY:
+        logger.error("SHADOW313_API_KEY is required to read authenticated API events")
         return
 
     logger.info("Shadow313 Telegram Bot starting — min_severity=%s poll=%ss",
