@@ -31,7 +31,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.url="https://shadow313.dev"
 
 RUN apt-get update -o Acquire::Retries=3 \
-    && apt-get install -y --no-install-recommends ca-certificates curl tcpdump nmap dnsutils iputils-ping libssl3 \
+    && apt-get install -y --no-install-recommends ca-certificates curl tcpdump nmap dnsutils iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
 ENV http_proxy="" https_proxy=""
