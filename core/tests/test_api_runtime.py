@@ -44,3 +44,28 @@ def test_app_refuses_to_start_without_api_key(monkeypatch):
         assert "SHADOW313_API_KEY" in str(exc)
     else:
         raise AssertionError("API must not start without an authentication key")
+
+
+
+def test_webshell_scan_detection_is_published_to_event_feed():
+    client = TestClient(create_app(api_key="test-secret"))
+    response = client.post(
+        "/api/webshell/scan",
+        headers={"X-API-Key": "test-secret"},
+        json={
+            "content": "<?php eval(base64_decode($_POST['cmd'])); ?>",
+            "file_path": "uploads/suspicious.php",
+            "mode": "content",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["detected"] is True
+
+    events = client.get(
+        "/api/events?since=0",
+        headers={"X-API-Key": "test-secret"},
+    )
+    assert events.status_code == 200
+    assert events.json()["count"] == 1
+    assert events.json()["events"][0]["source"] == "webshell_scan"
+    assert events.json()["events"][0]["technique"] == "T1505.003"
