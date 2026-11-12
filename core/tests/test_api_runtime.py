@@ -69,3 +69,28 @@ def test_webshell_scan_detection_is_published_to_event_feed():
     assert events.json()["count"] == 1
     assert events.json()["events"][0]["source"] == "webshell_scan"
     assert events.json()["events"][0]["technique"] == "T1505.003"
+
+
+def test_event_feed_persists_across_app_restarts(tmp_path):
+    database = tmp_path / "events.sqlite3"
+    first_client = TestClient(create_app(api_key="test-secret", events_db_path=str(database)))
+    scan = first_client.post(
+        "/api/webshell/scan",
+        headers={"X-API-Key": "test-secret"},
+        json={
+            "content": "<?php eval(base64_decode($_POST['cmd'])); ?>",
+            "file_path": "uploads/persistent.php",
+            "mode": "content",
+        },
+    )
+    assert scan.status_code == 200
+    assert scan.json()["detected"] is True
+
+    restarted_client = TestClient(create_app(api_key="test-secret", events_db_path=str(database)))
+    events = restarted_client.get(
+        "/api/events?since=0", headers={"X-API-Key": "test-secret"}
+    )
+    assert events.status_code == 200
+    assert events.json()["count"] == 1
+    assert events.json()["events"][0]["source"] == "webshell_scan"
+    assert events.json()["events"][0]["event"]["scan_target"] == "uploads/persistent.php"
