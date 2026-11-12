@@ -35,7 +35,7 @@ from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # ── Simple API Key Auth (replace with JWT in production) ──────────────────
-_API_KEY = os.environ.get("SHADOW313_API_KEY", "shadow313-local-dev-key")
+_API_KEY = os.environ.get("SHADOW313_API_KEY", "")
 _security = HTTPBearer(auto_error=False)
 
 # ── Rate limiting (simple in-memory) ─────────────────────────────────────
@@ -88,7 +88,7 @@ async def verify_api_key(
     client_ip = request.client.host if request.client else "127.0.0.1"
     _check_rate_limit(client_ip)
     
-    dev_mode = os.environ.get("SHADOW313_DEV_MODE", "true").lower() == "true"
+    dev_mode = os.environ.get("SHADOW313_DEV_MODE", "false").lower() == "true"
     if dev_mode and client_ip in ("127.0.0.1", "::1", "localhost"):
         return "dev"
     
