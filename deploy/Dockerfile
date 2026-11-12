@@ -39,7 +39,7 @@ COPY --from=builder /install /usr/local
 COPY --from=builder /app /app
 
 RUN useradd --uid 10313 --user-group -m -s /bin/bash shadow313 \
-    && mkdir -p /home/shadow313/.shadow313/{sessions,plugins,wordlists,logs,data,reports,receipts,campaigns,agent_runs} \
+    && mkdir -p /home/shadow313/.shadow313/sessions /home/shadow313/.shadow313/plugins /home/shadow313/.shadow313/wordlists /home/shadow313/.shadow313/logs /home/shadow313/.shadow313/data /home/shadow313/.shadow313/reports /home/shadow313/.shadow313/receipts /home/shadow313/.shadow313/campaigns /home/shadow313/.shadow313/agent_runs \
     && chown -R shadow313:shadow313 /home/shadow313/.shadow313
 
 ENV PYTHONPATH=/app
