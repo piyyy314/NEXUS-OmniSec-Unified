@@ -33,3 +33,14 @@ def test_protected_module_route_rejects_wrong_api_key():
         headers={"X-API-Key": "wrong-secret"},
     )
     assert response.status_code == 401
+
+
+
+def test_app_refuses_to_start_without_api_key(monkeypatch):
+    monkeypatch.delenv("SHADOW313_API_KEY", raising=False)
+    try:
+        create_app()
+    except RuntimeError as exc:
+        assert "SHADOW313_API_KEY" in str(exc)
+    else:
+        raise AssertionError("API must not start without an authentication key")
