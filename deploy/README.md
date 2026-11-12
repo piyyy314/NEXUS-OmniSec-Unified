@@ -43,7 +43,7 @@ The first startup pulls the configured Ollama model and can take time and substa
 - Web interface alternate listener: `http://127.0.0.1:8080/`
 - API through Nginx: `http://127.0.0.1/nexus-api/`
 
-Protected API routes require the `X-API-Key` header using `SHADOW313_API_KEY`. The public liveness endpoint is `/nexus-api/health`. Detection matches from `POST /nexus-api/api/detect` and positive results from `POST /nexus-api/api/webshell/scan` are recorded in a bounded in-memory event feed at `GET /nexus-api/api/events`; the optional Telegram service polls that feed using the same API key. The API refuses to start without `SHADOW313_API_KEY`.
+Protected API routes require the `X-API-Key` header using `SHADOW313_API_KEY`. The public liveness endpoint is `/nexus-api/health`. Detection matches from `POST /nexus-api/api/detect` and positive results from `POST /nexus-api/api/webshell/scan` are recorded in a persistent SQLite event feed at `GET /nexus-api/api/events`. The database defaults to `/home/shadow313/.shadow313/events.sqlite3` inside the API container and is stored on the `shadow313_data` volume; set `SHADOW313_EVENTS_DB` to override the path. The API retains the newest 10,000 events and returns oldest-first pages so Telegram can drain a backlog. The optional Telegram service polls the feed using the same API key. The API refuses to start without `SHADOW313_API_KEY`.
 
 Use an SSH tunnel or a separately secured VPN/reverse proxy for remote access. Do not expose the API or Ollama ports directly to the public internet.
 
@@ -69,7 +69,7 @@ docker compose logs -f shadow313-api nginx
 docker compose down
 ```
 
-Persistent data is stored in the Docker volume mapped to `SHADOW313_DATA_DIR`; model and WebUI data use separate named volumes. `docker compose down -v` deletes named volumes and should not be used unless you intend to remove persisted model and application data.
+Persistent application data, including the SQLite security-event database, is stored in the Docker volume mapped to `SHADOW313_DATA_DIR`; model and WebUI data use separate named volumes. The API mounts this application-data volume read/write only for its event database; other service mounts retain their configured access modes. `docker compose down -v` deletes named volumes and should not be used unless you intend to remove persisted model and application data.
 
 ## Validation
 
