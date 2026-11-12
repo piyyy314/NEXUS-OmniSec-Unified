@@ -35,7 +35,7 @@ logger = logging.getLogger("shadow313.telegram")
 
 BOT_TOKEN       = os.getenv("TELEGRAM_BOT_TOKEN", "")
 CHAT_ID         = os.getenv("TELEGRAM_CHAT_ID", "")
-API_URL         = os.getenv("SHADOW313_API_URL", "http://shadow313-api:8000")
+API_URL         = os.getenv("SHADOW313_API_URL", "http://shadow313-api:8313")
 MIN_SEVERITY    = os.getenv("TELEGRAM_MIN_SEVERITY", "HIGH").upper()
 POLL_INTERVAL   = int(os.getenv("TELEGRAM_POLL_INTERVAL", "10"))
 
