@@ -214,7 +214,7 @@ def create_app(api_key: str | None = None, events_db_path: str | None = None) ->
             "technique": technique,
             "event": event,
         }
-        with connect_events_db() as connection:
+        with closing(connect_events_db()) as connection, connection:
             connection.execute(
                 """INSERT INTO security_events
                    (event_id, ts, timestamp, severity, source, message, technique, event_json)
@@ -273,7 +273,7 @@ def create_app(api_key: str | None = None, events_db_path: str | None = None) ->
     @app.get("/api/events")
     async def list_events(since: float = 0, limit: int = 50, _: str = Depends(verify_api_key)):
         safe_limit = max(1, min(limit, 200))
-        with connect_events_db() as connection:
+        with closing(connect_events_db()) as connection, connection:
             count = connection.execute(
                 "SELECT COUNT(*) FROM security_events WHERE ts > ?", (since,)
             ).fetchone()[0]
