@@ -31,14 +31,14 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.url="https://shadow313.dev"
 
 RUN apt-get update -o Acquire::Retries=3 \
-    && apt-get install -y --no-install-recommends tcpdump nmap dnsutils iputils-ping libssl3 \
+    && apt-get install -y --no-install-recommends ca-certificates curl tcpdump nmap dnsutils iputils-ping libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV http_proxy="" https_proxy=""
 COPY --from=builder /install /usr/local
 COPY --from=builder /app /app
 
-RUN useradd -m -s /bin/bash shadow313 \
+RUN useradd --uid 10313 --user-group -m -s /bin/bash shadow313 \
     && mkdir -p /home/shadow313/.shadow313/{sessions,plugins,wordlists,logs,data,reports,receipts,campaigns,agent_runs} \
     && chown -R shadow313:shadow313 /home/shadow313/.shadow313
 
@@ -53,8 +53,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD python -c "import shadow313; print('ok')" || exit 1
 
 EXPOSE 7313 7314 8313
-ENTRYPOINT ["python", "-m", "shadow313.cli.main"]
-CMD ["--help"]
+ENTRYPOINT ["python"]
+CMD ["-m", "shadow313.cli.main", "--help"]
 
 # Full NEXUS image includes additional runtime utilities.
 FROM production AS nexus
