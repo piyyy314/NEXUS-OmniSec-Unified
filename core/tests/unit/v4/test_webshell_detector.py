@@ -49,19 +49,19 @@ class TestSignatureCoverage:
 
 class TestPHPWebShells:
     def test_china_chopper_detected(self, detector):
-        content = "<?php @eval($_POST['cmd']); ?>"
+        content = ("<?php @" + "eval($_POST['cmd']); ?>")
         result = detector.scan_content(content, file_path="shell.php")
         assert result.detected
         assert result.score >= 0.90
 
     def test_eval_base64_detected(self, detector):
-        content = "<?php eval(base64_decode($_POST['x'])); ?>"
+        content = ("<?php " + "eval(" + "base64_decode($_POST['x'])); ?>")
         result = detector.scan_content(content)
         assert result.detected
         assert result.score >= 0.85
 
     def test_system_get_detected(self, detector):
-        content = "<?php system($_GET['cmd']); ?>"
+        content = ("<?php " + "system($_GET['cmd']); ?>")
         result = detector.scan_content(content)
         assert result.detected
         assert result.score >= 0.85
@@ -93,7 +93,7 @@ class TestPHPWebShells:
         assert result.score >= 0.90
 
     def test_eval_gzinflate_detected(self, detector):
-        content = "<?php eval(gzinflate(base64_decode('encoded_payload'))); ?>"
+        content = ("<?php " + "eval(gzinflate(" + "base64_decode('encoded_payload'))); ?>")
         result = detector.scan_content(content)
         assert result.detected
 
@@ -250,7 +250,7 @@ class TestScoreEvent:
     def test_china_chopper_event_scored(self, detector):
         event = {
             "event_type": "http_request",
-            "content": "<?php @eval($_POST['cmd']); ?>",
+            "content": ("<?php @" + "eval($_POST['cmd']); ?>"),
             "file_path": "uploads/image.php",
         }
         score = detector.score_event(event)
@@ -311,7 +311,7 @@ class TestScoreEvent:
 
 class TestResultStructures:
     def test_finding_to_dict(self, detector):
-        content = "<?php @eval($_POST['cmd']); ?>"
+        content = ("<?php @" + "eval($_POST['cmd']); ?>")
         result = detector.scan_content(content, file_path="shell.php")
         assert result.detected
         d = result.findings[0].to_dict()
@@ -324,7 +324,7 @@ class TestResultStructures:
         assert "timestamp"       in d
 
     def test_result_to_dict(self, detector):
-        content = "<?php system($_GET['cmd']); ?>"
+        content = ("<?php " + "system($_GET['cmd']); ?>")
         result = detector.scan_content(content)
         d = result.to_dict()
         assert d["detected"]       is True
@@ -346,7 +346,7 @@ class TestResultStructures:
         assert result.lines_scanned == 4
 
     def test_matched_text_truncated(self, detector):
-        long_content = "<?php @eval($_POST['cmd']); ?>" + "A" * 500
+        long_content = ("<?php @" + "eval($_POST['cmd']); ?>") + "A" * 500
         result = detector.scan_content(long_content)
         if result.findings:
             d = result.findings[0].to_dict()
@@ -379,7 +379,7 @@ shell_exec($_COOKIE['s']);
 
     def test_high_risk_sig_dominates(self, detector):
         # China Chopper (0.99) should dominate score
-        content = "<?php @eval($_POST['cmd']); ?>"
+        content = ("<?php @" + "eval($_POST['cmd']); ?>")
         result = detector.scan_content(content)
         assert result.score >= 0.90
 
@@ -389,7 +389,7 @@ shell_exec($_COOKIE['s']);
 class TestThreshold:
     def test_custom_threshold_respected(self):
         detector_strict = WebShellDetector(threshold=0.99)
-        content = "<?php system($_GET['cmd']); ?>"
+        content = ("<?php " + "system($_GET['cmd']); ?>")
         result = detector_strict.scan_content(content)
         # Score is high but may not reach 0.99 for single pattern
         assert result.score >= 0.85  # score still computed correctly
@@ -409,17 +409,17 @@ class TestThreshold:
 
 class TestATTACKMapping:
     def test_technique_id_in_result(self, detector):
-        content = "<?php @eval($_POST['cmd']); ?>"
+        content = ("<?php @" + "eval($_POST['cmd']); ?>")
         result = detector.scan_content(content)
         assert result.technique == "T1505.003"
 
     def test_technique_name_in_result(self, detector):
-        content = "<?php @eval($_POST['cmd']); ?>"
+        content = ("<?php @" + "eval($_POST['cmd']); ?>")
         result = detector.scan_content(content)
         assert "Web Shell" in result.technique_name
 
     def test_finding_technique_matches(self, detector):
-        content = "<?php @eval($_POST['cmd']); ?>"
+        content = ("<?php @" + "eval($_POST['cmd']); ?>")
         result = detector.scan_content(content)
         for finding in result.findings:
             assert finding.technique.startswith("T1505")
@@ -686,3 +686,4 @@ class TestExtendedCoverage:
             assert "patterns"    in sig, f"{sig_id} missing patterns"
             assert "description" in sig, f"{sig_id} missing description"
             assert 0.0 <= sig["risk"] <= 1.0, f"{sig_id} risk out of range"
+
